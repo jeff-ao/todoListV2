@@ -9,5 +9,5 @@ app.use(express.json());
 app.use("/users", userRouter);
 
 app.listen(port, () => {
-  console.log(`rodando na porta ${port}`);
+  console.log(`rodando na porta tudo certo!! ${port}`);
 });
