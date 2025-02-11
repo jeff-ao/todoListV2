@@ -1,15 +1,13 @@
-import express,{Request,Response} from 'express'
+import express, { Request, Response } from "express";
+import userRouter from "./router/userRouter";
 
-
-const app = express()
-const port:number = 3000;
+const app = express();
+const port: number = 3000;
 
 app.use(express.json());
 
-app.get('/',(req:Request,res:Response):void=>{
-    res.send("focionando")
-})
+app.use("/users", userRouter);
 
-app.listen(port,()=>{
-    console.log(`rodando na porta ${port}`)
-})
+app.listen(port, () => {
+  console.log(`rodando na porta ${port}`);
+});
