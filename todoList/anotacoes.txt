@@ -1,0 +1,4 @@
+pra entrar no db:
+    docker-compose up -d
+    docker exec -it mysql bash
+    mysql -u expressuser -p
