@@ -56,7 +56,7 @@ export const editTask = async (id: number, task: string, category: string) => {
 
 export const editCompleted = async (id: number) => {
   try {
-    const response = await axios.patch(`${APILink}/${id}/completed`);
+    const response = await axios.put(`${APILink}/${id}/completed`);
 
     return response.data;
   } catch (error) {

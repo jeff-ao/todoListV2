@@ -7,7 +7,7 @@ export interface Task {
   id: number;
   task: string;
   category: string;
-  completed: string;
+  completed: boolean;
 }
 export interface TasksProp {
   tasks: Task[];
@@ -23,6 +23,15 @@ export interface AlertModalProps {
   notification: notification;
 }
 
-export interface onClickProp {
-  onClick: (userId: number, task: string, category: string) => void;
+export interface onCreateTaskProp {
+  onCreateTask: (userId: number, task: string, category: string) => void;
+}
+export interface onEditTaskProp {
+  onEditTask: (id: number, task: string, category: string) => void;
+}
+export interface onEditCompletedTaskProp {
+  onEditCompletedTask: (id: number) => void;
+}
+export interface onDeletetTaskProp {
+  onDeletetTask: (id: number) => void;
 }

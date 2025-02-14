@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
+import { toast } from "sonner";
 import {
   Card,
   CardHeader,
@@ -15,49 +16,27 @@ import {
 import { Mails, KeyRound, UserSquareIcon } from "lucide-react";
 import { userLogin } from "@/service/userService";
 import React, { useState } from "react";
-import { notification, User } from "@/types";
-import AlertModal from "@/components/AlertModal";
+import { User } from "@/types";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [openNotification, setOpenNotification] = useState(false);
-  const [notificationConfig, setNotificationConfig] = useState<notification>({
-    variant: "default",
-    title: "",
-    description: "",
-  });
   const router = useRouter();
 
   const handleUserLogin = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!email || !password) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
-      });
-      setOpenNotification(true);
-      setTimeout(() => {
-        setOpenNotification(false);
-      }, 3000);
+      toast.info("envie todos campos");
       return;
     }
 
     try {
-      console.log(email, password);
       const response = await userLogin(email, password);
-      console.log(response);
 
-      if (response.error) {
-        setNotificationConfig({
-          variant: "destructive",
-          title: "Erro",
-          description: "Falha no login. Verifique suas credenciais.",
-        });
-        setOpenNotification(true);
+      if (response.error || !response || response.status) {
+        toast.error("erro ao fazer login");
         return;
       }
 
@@ -68,12 +47,8 @@ export default function Login() {
           localStorage.getItem("usuario") || "{}"
         );
 
-        setNotificationConfig({
-          variant: "default",
-          title: "Login realizado!",
-          description: `Bem-vindo, ${usuario.name}!`,
-        });
-        setOpenNotification(true);
+        toast.success(`Login realizado com sucesso! 
+          Bem vindo ${usuario.name}`);
 
         // Esconde o alerta depois de 3 segundos
         setTimeout(() => {
@@ -81,12 +56,7 @@ export default function Login() {
         }, 3000);
       }
     } catch (error) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao fazer login. Por favor, tente novamente.",
-      });
-      setOpenNotification(true);
+      toast.error("erro interno, por favor tente outra hora");
     }
   };
 
@@ -211,9 +181,7 @@ export default function Login() {
           width: "400px",
           display: "flex",
         }}
-      >
-        {openNotification && <AlertModal notification={notificationConfig} />}
-      </div>
+      ></div>
     </div>
   );
 }

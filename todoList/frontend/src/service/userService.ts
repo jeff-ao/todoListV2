@@ -9,6 +9,9 @@ export const userLogin = async (email: string, password: string) => {
       password: password,
     });
 
+    if (response.status === 400) {
+      return response.status;
+    }
     return response.data;
   } catch (error) {
     return error instanceof Error

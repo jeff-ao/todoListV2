@@ -2,11 +2,12 @@
 import { CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { onClickProp, User } from "@/types";
+
+import { onCreateTaskProp, User } from "@/types";
 import { useState } from "react";
 import { Plus, NotebookPen } from "lucide-react";
 
-export default function AddTask({ onClick }: onClickProp) {
+export default function AddTask({ onCreateTask }: onCreateTaskProp) {
   const usuario: User = JSON.parse(localStorage.getItem("usuario") || "{}");
   const [id, setId] = useState(usuario.id ? usuario.id : 0);
   const [task, setTask] = useState("");
@@ -48,7 +49,7 @@ export default function AddTask({ onClick }: onClickProp) {
               (prev) =>
                 prev.trim()[0].toLocaleUpperCase() + prev.trim().slice(1)
             );
-            onClick(id, task, category);
+            onCreateTask(id, task, category);
             setTask("");
             setCategory("");
           }}

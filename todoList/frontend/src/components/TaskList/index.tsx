@@ -1,5 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { Card, CardContent } from "../ui/card";
-import { TasksProp } from "@/types";
+import { toast } from "sonner";
+import {
+  onEditTaskProp,
+  onDeletetTaskProp,
+  onEditCompletedTaskProp,
+  TasksProp,
+} from "@/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,11 +21,24 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "../ui/button";
-import { Switch } from "../ui/switch";
 import { Pen, Trash, Circle, Check } from "lucide-react";
 import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 
-export default function TaskList({ tasks }: TasksProp) {
+export default function TaskList({
+  tasks,
+  onEditTask,
+  onEditCompletedTask,
+  onDeletetTask,
+}: TasksProp & onEditTaskProp & onEditCompletedTaskProp & onDeletetTaskProp) {
+  const [taskModal, setTaskModal] = useState({
+    id: 0,
+    task: "",
+    category: "",
+    completed: false,
+  });
+
   return (
     <CardContent className="flexh-80 overflow-y-auto ">
       <div
@@ -69,13 +91,71 @@ export default function TaskList({ tasks }: TasksProp) {
               position: "relative",
             }}
           >
-            <Button variant={"ghost"}>
+            <Button
+              variant={"ghost"}
+              onClick={() => {
+                onEditCompletedTask(task.id);
+                if (!task.completed) {
+                  toast.success("Tarefa concluida!");
+                }
+              }}
+            >
               {task.completed ? <Check /> : <Circle />}
             </Button>
-            <Button variant={"ghost"}>
-              <Pen />
-            </Button>
-            <Button variant={"ghost"}>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant={"ghost"}
+                  onClick={() => {
+                    setTaskModal(task);
+                  }}
+                >
+                  <Pen />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Edite sua tarefa:</AlertDialogTitle>
+                  <AlertDialogDescription className="flex">
+                    <Input
+                      placeholder="Tarefa"
+                      value={taskModal.task || ""}
+                      onChange={(e) =>
+                        setTaskModal({ ...taskModal, task: e.target.value })
+                      }
+                      style={{
+                        width: "90%",
+                        marginRight: "1vh",
+                      }}
+                    />
+                    <Input
+                      placeholder="Categoria"
+                      value={taskModal.category || ""}
+                      onChange={(e) =>
+                        setTaskModal({ ...taskModal, category: e.target.value })
+                      }
+                    />
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      onEditTask(task.id, taskModal.task, taskModal.category);
+                    }}
+                  >
+                    Confirmar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button
+              variant={"ghost"}
+              onClick={() => {
+                onDeletetTask(task.id);
+              }}
+            >
               <Trash />
             </Button>
           </div>

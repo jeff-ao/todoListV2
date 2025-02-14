@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@radix-ui/react-label";
+
 import {
   Card,
   CardHeader,
@@ -12,64 +12,43 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { User } from "@/types";
 import { Mails, KeyRound, UserSquareIcon } from "lucide-react";
 import { userRegister } from "@/service/userService";
 import React, { useState } from "react";
-import { notification, User } from "@/types";
-import AlertModal from "@/components/AlertModal";
+
 import validator from "validator";
+import { toast } from "sonner";
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [openNotification, setOpenNotification] = useState(false);
-  const [notificationConfig, setNotificationConfig] = useState<notification>({
-    variant: "default",
-    title: "",
-    description: "",
-  });
+
   const router = useRouter();
 
   const handleUserRegister = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!name || !email || !password) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
-      });
-      setOpenNotification(true);
-      setTimeout(() => {
-        setOpenNotification(false);
-      }, 3000);
+      toast.info("preencha todos os campos");
       return;
     }
 
     if (!validator.isEmail(email)) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "Por favor, insira um email válido.",
-      });
-      setOpenNotification(true);
-      setTimeout(() => {
-        setOpenNotification(false);
-      }, 3000);
+      toast.error("email invalido");
       return;
     }
 
-    if (!validator.isLength(password, { min: 6 })) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-      });
-      setOpenNotification(true);
-      setTimeout(() => {
-        setOpenNotification(false);
-      }, 3000);
+    if (
+      !validator.isStrongPassword(password, {
+        minLength: 8,
+        minSymbols: 1,
+        minUppercase: 1,
+        minNumbers: 3,
+      })
+    ) {
+      toast.error("senha fraca");
       return;
     }
 
@@ -77,33 +56,16 @@ export default function Register() {
       const user: User = await userRegister(name, email, password);
 
       if (!user) {
-        return setNotificationConfig({
-          variant: "destructive",
-          title: "erro ao cadastrar",
-          description: "",
-        });
+        toast.error("erro ao cadastrar usuario");
+        return;
       }
 
-      setNotificationConfig({
-        variant: "default",
-        title: "Sucesso",
-        description: "Usuário registrado com sucesso.",
-      });
-      setOpenNotification(true);
+      toast.success("Cadastro realizado com sucesso!");
       setTimeout(() => {
-        setOpenNotification(false);
         router.push("/");
       }, 3000);
     } catch (error) {
-      setNotificationConfig({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao registrar o usuário.",
-      });
-      setOpenNotification(true);
-      setTimeout(() => {
-        setOpenNotification(false);
-      }, 3000);
+      toast.error("senha fraca");
     }
   };
   return (
@@ -251,9 +213,7 @@ export default function Register() {
           display: "flex",
           position: "revert",
         }}
-      >
-        {openNotification && <AlertModal notification={notificationConfig} />}
-      </div>
+      ></div>
     </div>
   );
 }

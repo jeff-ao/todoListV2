@@ -1,10 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
+
 import AddTask from "@/components/AddTask";
 import {
   timelineTasks,
@@ -16,6 +14,7 @@ import {
 import TaskList from "@/components/TaskList";
 import AlertModal from "@/components/AlertModal";
 import { Task, User } from "@/types";
+import { toast } from "sonner";
 
 export default function Home() {
   const [tasksArr, setTasksArr] = useState<Task[]>([]);
@@ -27,11 +26,11 @@ export default function Home() {
     try {
       const tasks: Task[] = await timelineTasks(userId, "desc");
       if (!Array.isArray(tasks)) {
-        return console.log("erro ao trazer posts");
+        return toast.error("erro ao trazer posts");
       }
       setTasksArr(tasks);
     } catch (error) {
-      alert(error);
+      toast.error(`${error}`);
     }
   };
 
@@ -43,11 +42,42 @@ export default function Home() {
     try {
       if (!task.trim()) return alert("o conteudo nao pode ser vazio");
       await createTask(task, category, user_id);
+      toast.success("Tarefa criada com sucesso!");
       task = "";
       category = "";
       setTasksArr([]);
     } catch (error) {
-      alert(error);
+      toast.error(`${error}`);
+    }
+  };
+
+  const handleEditTask = async (id: number, task: string, category: string) => {
+    try {
+      if (!task.trim()) return alert("o conteudo nao pode ser vazio");
+      await editTask(id, task, category);
+      toast.success("Tarefa editada com sucesso!");
+      setTasksArr([]);
+    } catch (error) {
+      toast.error(`${error}`);
+    }
+  };
+  const handleEditCompletedTask = async (id: number) => {
+    try {
+      await editCompleted(id);
+
+      setTasksArr([]);
+    } catch (error) {
+      toast.error(`${error}`);
+    }
+  };
+
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await deleteTask(id);
+      toast.success("Tarefa deletada com sucesso!");
+      setTasksArr([]);
+    } catch (error) {
+      toast.error(`${error}`);
     }
   };
 
@@ -80,8 +110,13 @@ export default function Home() {
           flexDirection: "column",
         }}
       >
-        <AddTask onClick={handleCreateTask} />
-        <TaskList tasks={tasksArr} />
+        <AddTask onCreateTask={handleCreateTask} />
+        <TaskList
+          tasks={tasksArr}
+          onEditTask={handleEditTask}
+          onEditCompletedTask={handleEditCompletedTask}
+          onDeletetTask={handleDeleteTask}
+        />
       </Card>
     </div>
   );
