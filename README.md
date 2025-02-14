@@ -80,7 +80,14 @@ npm install
 npm run dev
 ```
 
-Acesse o frontend em **http://localhost:3000** e o backend em **http://localhost:5000**.
+Acesse o frontend em **http://localhost:3000**, o backend em **http://localhost:3003**, a documentação em **http://localhost:3003/api-docs**.
+
+e o database rodando
+
+```bash
+cd backend
+npx prisma studio
+```
 
 ---
 
