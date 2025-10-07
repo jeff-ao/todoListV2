@@ -25,6 +25,32 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, "Senha é obrigatória"),
 });
 
+export const updateUserSchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "Nome deve ter pelo menos 3 caracteres")
+      .max(100, "Nome deve ter no máximo 100 caracteres")
+      .trim()
+      .transform((name) => name.replace(/\s+/g, " "))
+      .optional(),
+    email: z
+      .string()
+      .email("Email inválido")
+      .trim()
+      .toLowerCase()
+      .max(255, "Email deve ter no máximo 255 caracteres")
+      .optional(),
+    password: z
+      .string()
+      .min(8, "Senha deve ter pelo menos 8 caracteres")
+      .max(100, "Senha deve ter no máximo 100 caracteres")
+      .optional(),
+  })
+  .refine((data) => data.name || data.email || data.password, {
+    message: "Pelo menos um campo deve ser fornecido para atualização",
+  });
+
 // Category schemas
 export const createCategorySchema = z.object({
   name: z.string().min(1, "Nome da categoria é obrigatório").trim(),
@@ -107,6 +133,7 @@ export const idParamSchema = z.object({
 // Types
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type LoginUserInput = z.infer<typeof loginUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
 export type GetCategoriesInput = z.infer<typeof getCategoriesSchema>;

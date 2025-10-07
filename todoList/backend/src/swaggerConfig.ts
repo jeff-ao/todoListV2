@@ -169,6 +169,68 @@ const options: Options = {
             },
           },
         },
+        CreateUserRequest: {
+          type: "object",
+          required: ["name", "email", "password"],
+          properties: {
+            name: {
+              type: "string",
+              description: "Nome do usuário",
+              minLength: 3,
+              maxLength: 100,
+            },
+            email: {
+              type: "string",
+              format: "email",
+              description: "Email do usuário",
+              maxLength: 255,
+            },
+            password: {
+              type: "string",
+              description: "Senha do usuário",
+              minLength: 8,
+              maxLength: 100,
+            },
+          },
+        },
+        UpdateUserRequest: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "Novo nome do usuário",
+              minLength: 3,
+              maxLength: 100,
+            },
+            email: {
+              type: "string",
+              format: "email",
+              description: "Novo email do usuário",
+              maxLength: 255,
+            },
+            password: {
+              type: "string",
+              description: "Nova senha do usuário",
+              minLength: 8,
+              maxLength: 100,
+            },
+          },
+        },
+        LoginRequest: {
+          type: "object",
+          required: ["email", "password"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              description: "Email do usuário",
+            },
+            password: {
+              type: "string",
+              description: "Senha do usuário",
+            },
+          },
+        },
         Error: {
           type: "object",
           properties: {
