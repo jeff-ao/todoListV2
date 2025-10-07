@@ -14,21 +14,16 @@ const userService = {
     password: string
   ): Promise<User | object> => {
     try {
-      if (!name.trim() || !email.trim() || !password.trim()) {
-        return { error: "por favor,preencher todos os campos" };
-      }
-      if (name.length < 3)
-        return { error: "nome invalido, deve ter pelo menos 3 caracteres" };
+      // Verificar se o email já existe
+      const existingUser = await prisma.user.findFirst({
+        where: { email: email },
+      });
 
-      if (
-        !validator.isEmail(email) ||
-        (await prisma.user.findFirst({
-          where: { email: email },
-        }))
-      ) {
-        return { error: "email invalido" };
+      if (existingUser) {
+        return { error: "email já está sendo usado" };
       }
 
+      // Validar força da senha
       if (
         !validator.isStrongPassword(password, {
           minLength: 8,
@@ -37,10 +32,13 @@ const userService = {
           minNumbers: 3,
         })
       ) {
-        return { error: "senha fraca" };
+        return {
+          error:
+            "senha fraca - deve ter pelo menos 8 caracteres, 1 símbolo, 1 maiúscula e 3 números",
+        };
       }
 
-      const newUser: object = await prisma.user.create({
+      const newUser: User = await prisma.user.create({
         data: {
           name: name,
           email: email,
@@ -65,7 +63,7 @@ const userService = {
         },
       });
 
-      if (!user) return { error: "dados incorretor ou usuario não existe" };
+      if (!user) return { error: "dados incorretos ou usuário não existe" };
 
       return user;
     } catch (error: any) {

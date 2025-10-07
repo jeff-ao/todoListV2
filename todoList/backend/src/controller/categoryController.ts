@@ -1,25 +1,26 @@
 import { Request, Response } from "express";
-
+import { z } from "zod";
 import categoryService from "../service/categoryService";
 import { Category } from "@prisma/client";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  getCategoriesSchema,
+  idParamSchema,
+} from "../schemas";
 
 const categoryController = {
   createCategory: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const name = req.body.name;
-      const color = req.body.color;
-      const user_id = Number(req.body.user_id);
-
-      if (!name || !user_id) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const validatedData = createCategorySchema.parse({
+        ...req.body,
+        user_id: Number(req.body.user_id),
+      });
 
       const resultado = await categoryService.createCategory(
-        name,
-        color,
-        user_id
+        validatedData.name,
+        validatedData.color,
+        validatedData.user_id
       );
 
       if ("error" in resultado || !resultado) {
@@ -28,6 +29,15 @@ const categoryController = {
 
       return res.status(201).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
@@ -37,14 +47,10 @@ const categoryController = {
     res: Response
   ): Promise<Response> => {
     try {
-      const user_id = Number(req.query.user_id);
-
-      if (!user_id) {
-        return res.status(400).json({ error: "envie o user_id" });
-      }
+      const validatedData = getCategoriesSchema.parse(req.query);
 
       const resultado: Category[] | object =
-        await categoryService.getCategoriesByUserId(user_id);
+        await categoryService.getCategoriesByUserId(validatedData.user_id);
 
       if ("error" in resultado) {
         return res.status(400).json({ error: resultado.error });
@@ -52,26 +58,28 @@ const categoryController = {
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Parâmetros de consulta inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
 
   editCategory: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = Number(req.params.id);
-      const name = req.body.name;
-      const color = req.body.color;
-
-      if (!id || !name) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const validatedParams = idParamSchema.parse(req.params);
+      const validatedData = updateCategorySchema.parse(req.body);
 
       const resultado: Category | object = await categoryService.editCategory(
-        id,
-        name,
-        color
+        validatedParams.id,
+        validatedData.name,
+        validatedData.color
       );
 
       if ("error" in resultado) {
@@ -80,21 +88,26 @@ const categoryController = {
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
 
   deleteCategory: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = Number(req.params.id);
+      const validatedParams = idParamSchema.parse(req.params);
 
-      if (!id) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
-
-      const resultado: object = await categoryService.deleteCategory(id);
+      const resultado: object = await categoryService.deleteCategory(
+        validatedParams.id
+      );
 
       if ("error" in resultado) {
         return res.status(400).json({ error: resultado.error });
@@ -102,6 +115,15 @@ const categoryController = {
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "ID inválido",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },

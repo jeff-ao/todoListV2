@@ -1,27 +1,27 @@
 import { Request, Response } from "express";
-
+import { z } from "zod";
 import taskService from "../service/taskService";
 import { Task } from "@prisma/client";
+import {
+  createTaskSchema,
+  updateTaskSchema,
+  getTasksSchema,
+  idParamSchema,
+} from "../schemas";
 
 const taskController = {
   createTask: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const task = req.body.task;
-      const category_id = req.body.category_id
-        ? Number(req.body.category_id)
-        : null;
-      const user_id = Number(req.body.user_id);
-
-      if (!task || !user_id) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const validatedData = createTaskSchema.parse({
+        ...req.body,
+        category_id: req.body.category_id ? Number(req.body.category_id) : null,
+        user_id: Number(req.body.user_id),
+      });
 
       const resultado = await taskService.createTask(
-        task,
-        category_id,
-        user_id
+        validatedData.task,
+        validatedData.category_id ?? null,
+        validatedData.user_id
       );
 
       if ("error" in resultado || !resultado) {
@@ -30,20 +30,25 @@ const taskController = {
 
       return res.status(201).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
   timelineTasks: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const user_id = Number(req.query.user_id);
-
-      const order_by = req.query.order_by === "asc" ? "asc" : "desc";
-
-      if (!user_id) return res.status(400).json({ error: "envie o user_id" });
+      const validatedData = getTasksSchema.parse(req.query);
 
       const resultado: Task[] | object = await taskService.timelineTasks(
-        user_id,
-        order_by
+        validatedData.user_id,
+        validatedData.order_by
       );
 
       if ("error" in resultado)
@@ -51,71 +56,96 @@ const taskController = {
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Parâmetros de consulta inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
   editTask: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = Number(req.params.id);
-      const task = req.body.task;
-      const category_id = req.body.category_id
-        ? Number(req.body.category_id)
-        : null;
-
-      if (!id || !task) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const validatedParams = idParamSchema.parse(req.params);
+      const validatedData = updateTaskSchema.parse({
+        ...req.body,
+        category_id: req.body.category_id ? Number(req.body.category_id) : null,
+      });
 
       const resultado: Task | object = await taskService.editTask(
-        id,
-        task,
-        category_id
+        validatedParams.id,
+        validatedData.task,
+        validatedData.category_id ?? null
       );
+
       if ("error" in resultado)
         return res.status(400).json({ error: resultado.error });
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
   editCompleted: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = Number(req.params.id);
+      const validatedParams = idParamSchema.parse(req.params);
 
-      if (!id) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const resultado: Task | object = await taskService.editCompleted(
+        validatedParams.id
+      );
 
-      const resultado: Task | object = await taskService.editCompleted(id);
       if ("error" in resultado)
         return res.status(400).json({ error: resultado.error });
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "ID inválido",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
   deleteTask: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = Number(req.params.id);
+      const validatedParams = idParamSchema.parse(req.params);
 
-      if (!id) {
-        return res
-          .status(400)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      }
+      const resultado: Task | object = await taskService.deleteTask(
+        validatedParams.id
+      );
 
-      const resultado: Task | object = await taskService.deleteTask(id);
       if ("error" in resultado)
         return res.status(400).json({ error: resultado.error });
 
       return res.status(200).json(resultado);
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "ID inválido",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },

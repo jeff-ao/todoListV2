@@ -1,37 +1,58 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import userService from "../service/userService";
+import { createUserSchema, loginUserSchema } from "../schemas";
 
 const userController = {
   register: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const name: string = req.body.name;
-      const email: string = req.body.email;
-      const password: string = req.body.password;
+      const validatedData = createUserSchema.parse(req.body);
 
-      if (!name || !email || !password)
-        res
-          .status(401)
-          .json({ error: "preencha todos com campos obrigatorios" });
-      const response = await userService.register(name, email, password);
+      const response = await userService.register(
+        validatedData.name,
+        validatedData.email,
+        validatedData.password
+      );
 
       if ("error" in response)
         return res.status(400).json({ error: response.error });
       return res.status(201).json({ STATUS: "OK", usuario: response });
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },
   login: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { email, password } = req.body;
+      const validatedData = loginUserSchema.parse(req.body);
 
-      const response = await userService.login(email, password);
+      const response = await userService.login(
+        validatedData.email,
+        validatedData.password
+      );
 
       if ("error" in response)
         return res.status(400).json({ error: response.error });
 
       return res.status(201).json({ STATUS: "OK", usuario: response });
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dados de entrada inválidos",
+          details: error.issues.map((err: any) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
   },

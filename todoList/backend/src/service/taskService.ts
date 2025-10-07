@@ -9,12 +9,9 @@ const taskService = {
     user_id: number
   ): Promise<Task | object> => {
     try {
-      if (typeof task !== "string" || typeof user_id !== "number") {
-        return { error: "parametros invalidos" };
-      }
-
+      // Verificar se o usuário existe
       if (!(await prisma.user.findFirst({ where: { id: user_id } }))) {
-        return { error: "usuario não existe" };
+        return { error: "usuário não existe" };
       }
 
       // Verificar se a categoria existe e pertence ao usuário (se category_id foi fornecido)
@@ -30,10 +27,6 @@ const taskService = {
         }
       }
 
-      if (!task.trim() || !user_id) {
-        return { error: "envie todos os campos obrigatorios" };
-      }
-
       const newTask: Task = await prisma.task.create({
         data: {
           task,
@@ -44,8 +37,6 @@ const taskService = {
           Category: true,
         },
       });
-
-      if (!newTask) return { error: "erro ao cadastrar tarefa" };
 
       return newTask;
     } catch (error: any) {
@@ -62,7 +53,7 @@ const taskService = {
       });
 
       if (!user) {
-        return { error: "usuario  não encontrado" };
+        return { error: "usuário não encontrado" };
       }
 
       const tasks: Task[] = await prisma.task.findMany({
@@ -88,8 +79,6 @@ const taskService = {
     category_id: number | null
   ): Promise<Task | object> => {
     try {
-      if (!id || !task) return { error: "envie todos os campos" };
-
       // Verificar se a tarefa existe
       const existingTask = await prisma.task.findFirst({ where: { id } });
       if (!existingTask) {
@@ -117,8 +106,6 @@ const taskService = {
         },
       });
 
-      if (!updatedTask) return { error: "erro ao atualizar tarefa" };
-
       return updatedTask;
     } catch (error: any) {
       return { error: error.message };
@@ -126,23 +113,23 @@ const taskService = {
   },
   editCompleted: async (id: number): Promise<Task | object> => {
     try {
-      if (!id) return { error: "envie todos campos obrigatorios" };
       const task: Task | null = await prisma.task.findFirst({ where: { id } });
+
+      if (!task) {
+        return { error: "tarefa não encontrada" };
+      }
 
       const completedEdited: Task = await prisma.task.update({
         where: {
           id,
         },
         data: {
-          completed: !task?.completed,
+          completed: !task.completed,
         },
         include: {
           Category: true,
         },
       });
-      if (!completedEdited) {
-        return { error: "error ao alterar completed" };
-      }
 
       return completedEdited;
     } catch (error: any) {
@@ -152,8 +139,6 @@ const taskService = {
 
   deleteTask: async (id: number): Promise<object> => {
     try {
-      if (!id || typeof id !== "number") return { error: "envie o id" };
-
       const taskDeleted: Task | null = await prisma.task.delete({
         where: { id },
       });
@@ -162,7 +147,7 @@ const taskService = {
         return { error: "erro ao apagar tarefa" };
       }
 
-      return { message: "post deletado" };
+      return { message: "tarefa deletada" };
     } catch (error: any) {
       return {
         error: error.message,

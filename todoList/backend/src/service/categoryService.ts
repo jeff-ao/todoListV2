@@ -9,22 +9,15 @@ const categoryService = {
     user_id: number
   ): Promise<any | object> => {
     try {
-      if (typeof name !== "string" || typeof user_id !== "number") {
-        return { error: "parametros invalidos" };
-      }
-
+      // Verificar se o usuário existe
       if (!(await prisma.user.findFirst({ where: { id: user_id } }))) {
-        return { error: "usuario não existe" };
-      }
-
-      if (!name.trim() || !user_id) {
-        return { error: "envie todos os campos obrigatorios" };
+        return { error: "usuário não existe" };
       }
 
       // Verificar se a categoria já existe para este usuário
       const existingCategory = await prisma.category.findFirst({
         where: {
-          name: name.trim(),
+          name: name,
           user_id: user_id,
         },
       });
@@ -35,13 +28,11 @@ const categoryService = {
 
       const newCategory = await prisma.category.create({
         data: {
-          name: name.trim(),
+          name: name,
           color: color || "#3B82F6",
           user_id,
         },
       });
-
-      if (!newCategory) return { error: "erro ao cadastrar categoria" };
 
       return newCategory;
     } catch (error: any) {
@@ -56,7 +47,7 @@ const categoryService = {
       });
 
       if (!user) {
-        return { error: "usuario não encontrado" };
+        return { error: "usuário não encontrado" };
       }
 
       const categories = await prisma.category.findMany({
@@ -80,8 +71,6 @@ const categoryService = {
     color?: string
   ): Promise<any | object> => {
     try {
-      if (!id || !name) return { error: "envie todos os campos" };
-
       const existingCategory = await prisma.category.findFirst({
         where: { id },
       });
@@ -93,7 +82,7 @@ const categoryService = {
       // Verificar se já existe outra categoria com o mesmo nome para o mesmo usuário
       const duplicateCategory = await prisma.category.findFirst({
         where: {
-          name: name.trim(),
+          name: name,
           user_id: existingCategory.user_id,
           NOT: {
             id: id,
@@ -105,7 +94,7 @@ const categoryService = {
         return { error: "já existe uma categoria com este nome" };
       }
 
-      const updateData: any = { name: name.trim() };
+      const updateData: any = { name: name };
       if (color) {
         updateData.color = color;
       }
@@ -115,8 +104,6 @@ const categoryService = {
         data: updateData,
       });
 
-      if (!updatedCategory) return { error: "erro ao atualizar categoria" };
-
       return updatedCategory;
     } catch (error: any) {
       return { error: error.message };
@@ -125,8 +112,6 @@ const categoryService = {
 
   deleteCategory: async (id: number): Promise<object> => {
     try {
-      if (!id || typeof id !== "number") return { error: "envie o id" };
-
       // Verificar se existem tarefas usando esta categoria
       const tasksWithCategory = await prisma.task.findMany({
         where: { category_id: id },
