@@ -105,11 +105,16 @@ const categoryController = {
     try {
       const validatedParams = idParamSchema.parse(req.params);
 
-      const resultado: object = await categoryService.deleteCategory(
+      const resultado = await categoryService.deleteCategory(
         validatedParams.id
       );
 
       if ("error" in resultado) {
+        // Se a categoria não foi encontrada, retorna 404
+        if (resultado.error === "categoria não encontrada") {
+          return res.status(404).json({ error: resultado.error });
+        }
+        // Para outros erros, retorna 400
         return res.status(400).json({ error: resultado.error });
       }
 

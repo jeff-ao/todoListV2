@@ -139,15 +139,18 @@ const taskService = {
 
   deleteTask: async (id: number): Promise<object> => {
     try {
-      const taskDeleted: Task | null = await prisma.task.delete({
+      // Verificar se a tarefa existe antes de tentar deletar
+      const existingTask = await prisma.task.findFirst({ where: { id } });
+
+      if (!existingTask) {
+        return { error: "tarefa não encontrada" };
+      }
+
+      await prisma.task.delete({
         where: { id },
       });
 
-      if (!taskDeleted) {
-        return { error: "erro ao apagar tarefa" };
-      }
-
-      return { message: "tarefa deletada" };
+      return { message: "tarefa deletada com sucesso" };
     } catch (error: any) {
       return {
         error: error.message,

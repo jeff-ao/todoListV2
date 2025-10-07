@@ -112,6 +112,15 @@ const categoryService = {
 
   deleteCategory: async (id: number): Promise<object> => {
     try {
+      // Verificar se a categoria existe antes de tentar deletar
+      const existingCategory = await prisma.category.findFirst({
+        where: { id },
+      });
+
+      if (!existingCategory) {
+        return { error: "categoria não encontrada" };
+      }
+
       // Verificar se existem tarefas usando esta categoria
       const tasksWithCategory = await prisma.task.findMany({
         where: { category_id: id },
@@ -125,15 +134,11 @@ const categoryService = {
         });
       }
 
-      const categoryDeleted = await prisma.category.delete({
+      await prisma.category.delete({
         where: { id },
       });
 
-      if (!categoryDeleted) {
-        return { error: "erro ao apagar categoria" };
-      }
-
-      return { message: "categoria deletada" };
+      return { message: "categoria deletada com sucesso" };
     } catch (error: any) {
       return {
         error: error.message,

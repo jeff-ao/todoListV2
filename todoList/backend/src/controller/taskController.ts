@@ -128,12 +128,16 @@ const taskController = {
     try {
       const validatedParams = idParamSchema.parse(req.params);
 
-      const resultado: Task | object = await taskService.deleteTask(
-        validatedParams.id
-      );
+      const resultado = await taskService.deleteTask(validatedParams.id);
 
-      if ("error" in resultado)
+      if ("error" in resultado) {
+        // Se a tarefa não foi encontrada, retorna 404
+        if (resultado.error === "tarefa não encontrada") {
+          return res.status(404).json({ error: resultado.error });
+        }
+        // Para outros erros, retorna 400
         return res.status(400).json({ error: resultado.error });
+      }
 
       return res.status(200).json(resultado);
     } catch (error: any) {
