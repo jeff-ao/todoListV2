@@ -4,9 +4,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node app.ts",
+    "start": "node dist/app.js",
+    "start:dev": "ts-node src/app.ts",
     "build": "tsc",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
   },
   "keywords": [],
   "author": "",

@@ -5,29 +5,43 @@ const prisma = new PrismaClient();
 const taskService = {
   createTask: async (
     task: string,
-    category: string,
+    category_id: number | null,
     user_id: number
   ): Promise<Task | object> => {
     try {
-      if (
-        typeof task !== "string" ||
-        typeof category !== "string" ||
-        typeof user_id !== "number"
-      ) {
+      if (typeof task !== "string" || typeof user_id !== "number") {
         return { error: "parametros invalidos" };
       }
 
       if (!(await prisma.user.findFirst({ where: { id: user_id } }))) {
         return { error: "usuario não existe" };
       }
-      if (!task.trim() || !category.trim() || !user_id) {
+
+      // Verificar se a categoria existe e pertence ao usuário (se category_id foi fornecido)
+      if (category_id) {
+        const category = await prisma.category.findFirst({
+          where: {
+            id: category_id,
+            user_id: user_id,
+          },
+        });
+        if (!category) {
+          return { error: "categoria não existe ou não pertence ao usuário" };
+        }
+      }
+
+      if (!task.trim() || !user_id) {
         return { error: "envie todos os campos obrigatorios" };
       }
+
       const newTask: Task = await prisma.task.create({
         data: {
           task,
           user_id,
-          category,
+          category_id,
+        },
+        include: {
+          Category: true,
         },
       });
 
@@ -58,6 +72,9 @@ const taskService = {
         where: {
           user_id: user_id,
         },
+        include: {
+          Category: true,
+        },
       });
 
       return tasks;
@@ -68,14 +85,36 @@ const taskService = {
   editTask: async (
     id: number,
     task: string,
-    category: string
+    category_id: number | null
   ): Promise<Task | object> => {
     try {
-      if (!id || !task || !category) return { error: "envie todos os campos" };
+      if (!id || !task) return { error: "envie todos os campos" };
+
+      // Verificar se a tarefa existe
+      const existingTask = await prisma.task.findFirst({ where: { id } });
+      if (!existingTask) {
+        return { error: "tarefa não encontrada" };
+      }
+
+      // Verificar se a categoria existe e pertence ao usuário (se category_id foi fornecido)
+      if (category_id) {
+        const category = await prisma.category.findFirst({
+          where: {
+            id: category_id,
+            user_id: existingTask.user_id,
+          },
+        });
+        if (!category) {
+          return { error: "categoria não existe ou não pertence ao usuário" };
+        }
+      }
 
       const updatedTask: Task = await prisma.task.update({
         where: { id },
-        data: { task, category },
+        data: { task, category_id },
+        include: {
+          Category: true,
+        },
       });
 
       if (!updatedTask) return { error: "erro ao atualizar tarefa" };
@@ -96,6 +135,9 @@ const taskService = {
         },
         data: {
           completed: !task?.completed,
+        },
+        include: {
+          Category: true,
         },
       });
       if (!completedEdited) {

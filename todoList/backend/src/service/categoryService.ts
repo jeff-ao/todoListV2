@@ -1,0 +1,160 @@
+import { Prisma, PrismaClient, User } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+const categoryService = {
+  createCategory: async (
+    name: string,
+    color: string = "#3B82F6",
+    user_id: number
+  ): Promise<any | object> => {
+    try {
+      if (typeof name !== "string" || typeof user_id !== "number") {
+        return { error: "parametros invalidos" };
+      }
+
+      if (!(await prisma.user.findFirst({ where: { id: user_id } }))) {
+        return { error: "usuario não existe" };
+      }
+
+      if (!name.trim() || !user_id) {
+        return { error: "envie todos os campos obrigatorios" };
+      }
+
+      // Verificar se a categoria já existe para este usuário
+      const existingCategory = await prisma.category.findFirst({
+        where: {
+          name: name.trim(),
+          user_id: user_id,
+        },
+      });
+
+      if (existingCategory) {
+        return { error: "categoria já existe para este usuário" };
+      }
+
+      const newCategory = await prisma.category.create({
+        data: {
+          name: name.trim(),
+          color: color || "#3B82F6",
+          user_id,
+        },
+      });
+
+      if (!newCategory) return { error: "erro ao cadastrar categoria" };
+
+      return newCategory;
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  },
+
+  getCategoriesByUserId: async (user_id: number): Promise<any[] | object> => {
+    try {
+      const user: User | null = await prisma.user.findFirst({
+        where: { id: user_id },
+      });
+
+      if (!user) {
+        return { error: "usuario não encontrado" };
+      }
+
+      const categories = await prisma.category.findMany({
+        where: {
+          user_id: user_id,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      return categories;
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  },
+
+  editCategory: async (
+    id: number,
+    name: string,
+    color?: string
+  ): Promise<any | object> => {
+    try {
+      if (!id || !name) return { error: "envie todos os campos" };
+
+      const existingCategory = await prisma.category.findFirst({
+        where: { id },
+      });
+
+      if (!existingCategory) {
+        return { error: "categoria não encontrada" };
+      }
+
+      // Verificar se já existe outra categoria com o mesmo nome para o mesmo usuário
+      const duplicateCategory = await prisma.category.findFirst({
+        where: {
+          name: name.trim(),
+          user_id: existingCategory.user_id,
+          NOT: {
+            id: id,
+          },
+        },
+      });
+
+      if (duplicateCategory) {
+        return { error: "já existe uma categoria com este nome" };
+      }
+
+      const updateData: any = { name: name.trim() };
+      if (color) {
+        updateData.color = color;
+      }
+
+      const updatedCategory = await prisma.category.update({
+        where: { id },
+        data: updateData,
+      });
+
+      if (!updatedCategory) return { error: "erro ao atualizar categoria" };
+
+      return updatedCategory;
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  },
+
+  deleteCategory: async (id: number): Promise<object> => {
+    try {
+      if (!id || typeof id !== "number") return { error: "envie o id" };
+
+      // Verificar se existem tarefas usando esta categoria
+      const tasksWithCategory = await prisma.task.findMany({
+        where: { category_id: id },
+      });
+
+      if (tasksWithCategory.length > 0) {
+        // Atualizar tarefas para não ter categoria antes de deletar
+        await prisma.task.updateMany({
+          where: { category_id: id },
+          data: { category_id: null },
+        });
+      }
+
+      const categoryDeleted = await prisma.category.delete({
+        where: { id },
+      });
+
+      if (!categoryDeleted) {
+        return { error: "erro ao apagar categoria" };
+      }
+
+      return { message: "categoria deletada" };
+    } catch (error: any) {
+      return {
+        error: error.message,
+      };
+    }
+  },
+};
+
+export default categoryService;

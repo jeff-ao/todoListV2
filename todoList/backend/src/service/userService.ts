@@ -17,8 +17,8 @@ const userService = {
       if (!name.trim() || !email.trim() || !password.trim()) {
         return { error: "por favor,preencher todos os campos" };
       }
-      if (name.length < 3 || !validator.isAlpha(name))
-        return { error: "nome invalido" };
+      if (name.length < 3)
+        return { error: "nome invalido, deve ter pelo menos 3 caracteres" };
 
       if (
         !validator.isEmail(email) ||

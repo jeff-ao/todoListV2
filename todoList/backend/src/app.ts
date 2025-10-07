@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import userRouter from "./router/userRouter";
 import taskRouter from "./router/taskRoute";
+import categoryRouter from "./router/categoryRoute";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swaggerConfig";
 
@@ -16,6 +17,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/users", userRouter);
 app.use("/tasks", taskRouter);
+app.use("/categories", categoryRouter);
 
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando na porta ${port}`);

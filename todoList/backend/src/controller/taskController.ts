@@ -7,17 +7,25 @@ const taskController = {
   createTask: async (req: Request, res: Response): Promise<Response> => {
     try {
       const task = req.body.task;
-      const category = req.body.category;
+      const category_id = req.body.category_id
+        ? Number(req.body.category_id)
+        : null;
       const user_id = Number(req.body.user_id);
-      if (!task || !category || !user_id)
-        res
-          .status(401)
-          .json({ error: "preencha todos com campos obrigatorios" });
 
-      const resultado = await taskService.createTask(task, category, user_id);
+      if (!task || !user_id) {
+        return res
+          .status(400)
+          .json({ error: "preencha todos com campos obrigatorios" });
+      }
+
+      const resultado = await taskService.createTask(
+        task,
+        category_id,
+        user_id
+      );
 
       if ("error" in resultado || !resultado) {
-        res.status(401).json({ error: resultado.error });
+        return res.status(400).json({ error: resultado.error });
       }
 
       return res.status(201).json(resultado);
@@ -50,9 +58,11 @@ const taskController = {
     try {
       const id = Number(req.params.id);
       const task = req.body.task;
-      const category = req.body.category;
+      const category_id = req.body.category_id
+        ? Number(req.body.category_id)
+        : null;
 
-      if (!id || !task || !category) {
+      if (!id || !task) {
         return res
           .status(400)
           .json({ error: "preencha todos com campos obrigatorios" });
@@ -61,7 +71,7 @@ const taskController = {
       const resultado: Task | object = await taskService.editTask(
         id,
         task,
-        category
+        category_id
       );
       if ("error" in resultado)
         return res.status(400).json({ error: resultado.error });

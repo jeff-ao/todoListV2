@@ -29,20 +29,36 @@ const router = Router();
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Nome completo do usuário
  *                 example: "João Silva"
  *               email:
  *                 type: string
+ *                 format: email
+ *                 description: Email único do usuário
  *                 example: "joao@email.com"
  *               password:
  *                 type: string
+ *                 description: Senha do usuário
  *                 example: "SenhaSegura123!"
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Erro na requisição
+ *         description: Erro na requisição (email já existe, dados inválidos)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post("/", (req, res) => {
   userController.register(req, res);
@@ -66,17 +82,32 @@ router.post("/", (req, res) => {
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
+ *                 description: Email do usuário
  *                 example: "joao@email.com"
  *               password:
  *                 type: string
+ *                 description: Senha do usuário
  *                 example: "SenhaSegura123!"
  *     responses:
  *       201:
  *         description: Login realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Dados incorretos
+ *         description: Dados incorretos (email/senha inválidos)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post("/login", (req, res) => {
   userController.login(req, res);
