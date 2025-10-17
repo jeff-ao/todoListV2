@@ -1,6 +1,6 @@
 # To-Do List - Full Stack
 
-Este projeto é uma aplicação full stack de uma To-Do List, desenvolvida com **Prisma, TypeScript e Express** no backend e **Next.js e TypeScript** no frontend. O banco de dados utilizado é **SQLite**, rodando em um ambiente **WSL**.
+Esse projeto é uma aplicação full stack de uma To-Do List, desenvolvida com **Prisma, TypeScript e Express** no backend e **Next.js e TypeScript** no frontend. O banco de dados utilizado é **SQLite**, rodando em um ambiente **WSL**.
 
 ## 📁 Estrutura do Projeto
 
